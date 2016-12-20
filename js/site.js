@@ -1,20 +1,3 @@
-//Nepal
-/*
-var config = {
-	aggregators: ['Round'],
-	color:'#b71c1c',
-	colorbutton:'#EF5350',
-	colorfont:'#ffffff',
-	mapcolors:['#cccccc','#FFCDD2','#E57373','#F44336','#B71C1C'],
-	locations:'Location',
-	datafile:'data/resultsnepal.csv',
-	geomfile:'data/nepal_adm3_simplified.geojson',
-	joinAttr:'DISTRICT'
-
-}
-*/
-//krc
-
 var config = {
 	aggregators: [],
 	color:'#b71c1c',
@@ -27,18 +10,6 @@ var config = {
 	joinAttr:'NAME'
 }
 
-//unicef
-
-/*var config = {
-	aggregators: ['Sex'],
-	color:'#b71c1c',
-	mapcolors:['#cccccc','#FFCDD2','#E57373','#F44336','#B71C1C'],
-	locations:'Location',
-	datafile:'data/resultsunicef.csv',
-	geomfile:'data/krc_wards.geojson'
-	joinAttr:'NAME'
-}*/
-
 var map;
 var overlay;
 var mapon = false;
@@ -48,15 +19,15 @@ var mapon = false;
 
 function loadData(){
 
-	var dataCall = $.ajax({ 
-	    type: 'GET', 
-	    url: config.datafile, 
+	var dataCall = $.ajax({
+	    type: 'GET',
+	    url: config.datafile,
 	    dataType: 'text',
 	});
 
-	var geomCall = $.ajax({ 
-	    type: 'GET', 
-	    url: config.geomfile, 
+	var geomCall = $.ajax({
+	    type: 'GET',
+	    url: config.geomfile,
 	    dataType: 'json',
 	});
 
@@ -109,7 +80,9 @@ function initDash(data,geom){
 	$('#question').html(questions[0]);
 	createMap(geom);
 	genQuestion(cf.questionsDim.top(Infinity));
-	
+	$('#questions').mCustomScrollbar({
+		theme: 'minimal-dark'
+	});
 }
 
 // question initialisation
@@ -121,10 +94,10 @@ function genQuestion(data){
 	var cf = crossfilter(data);
 	cf.data = data;
 	cf.aggs = [];
-	
+
 	// create answer dimension
 	cf.answersDim = cf.dimension(function(d){return d['Answer']});
-	
+
 	// aggregators are the dimensions for filtering.  These include the location, answers and aggregators element
 	aggregators = [config.locations,'Answer'].concat(config.aggregators);
 
@@ -132,22 +105,22 @@ function genQuestion(data){
 	aggregators.forEach(function(agg,i){
 		cf.aggs[agg] = {};
 		cf.aggs[agg].dim = cf.dimension(function(d){return d[agg]});
-		cf.aggs[agg].values = cf.aggs[agg].dim.group().all().map(function(v,i){return v.key;});	
+		cf.aggs[agg].values = cf.aggs[agg].dim.group().all().map(function(v,i){return v.key;});
 	});
 
 	// create groups to display graphs + map
 	cf.answersGroup = cf.aggs['Answer'].dim.group().reduceSum(function(d){return d['Count']});
 	cf.locationsGroup = cf.aggs[config.locations].dim.group().reduceSum(function(d){return d['Count']});
-	
+
 	// drop down generated for graphs (map has answers, but not locations in dropdown)
 	genDropdowns(cf,[config.locations].concat(config.aggregators));
-	
+
 	// data for graph
 	var data = cf.answersGroup.all();
 
 	// set radio buttons to default graph
 	//$("input[type=radio][name=chart][value=bar]").prop('checked',true);
-	
+
 	//make sure graphs is showing and map isn't
 	$('#graph').show();
 	$('#map').hide();
@@ -192,13 +165,13 @@ function changeChart(cf,chart){
 		});
 		currentChart = chart;
 		// draw correct graph type and change dropdowns if appropriate
-        if(chart=='cichart'){			
+        if(chart=='cichart'){
 			$('#graph').show();
-			$('#map').hide(); 
+			$('#map').hide();
 			if(mapon){
 				mapon = false;
 				updateDropdowns(cf,config.locations);
-			}			
+			}
 			confidenceGraph(data);
 			$(window).on('resize',function(){
 				confidenceGraph(data);
@@ -209,12 +182,12 @@ function changeChart(cf,chart){
 			if(mapon){
 				mapon = false;
 				updateDropdowns(cf,config.locations);
-			}			
+			}
 			drawGraph(data,false);
 			$(window).on('resize',function(){
 				drawGraph(data,false);
 			});
-		} else if(chart=='barper'){			
+		} else if(chart=='barper'){
 			$('#graph').show();
 			$('#map').hide();
 			if(mapon){
@@ -225,7 +198,7 @@ function changeChart(cf,chart){
 			$(window).on('resize',function(){
 				console.log('resize');
 				drawGraph(data,true);
-			});			
+			});
 		}  else if(chart=='mapchart'){
 			$('#graph').hide();
 			$('#map').show();
@@ -233,8 +206,8 @@ function changeChart(cf,chart){
 			mapon = true;
 			updateMap(cf.locationsGroup.all(),cf);
 			map.invalidateSize();
-			map.fitBounds(overlay.getBounds());		
-		} 		
+			map.fitBounds(overlay.getBounds());
+		}
 	}
 
 // generate drop downs	
@@ -248,7 +221,7 @@ function genDropdowns(cf,aggs){
 
 	$('#aggregators').append('<div class="col-md-4"><span id="total"></span></div>');
 
-	
+
 }
 
 // function to change dropdown on graph/map switch
@@ -293,16 +266,16 @@ function updateDropdowns(cf,agg){
 		var data = cf.answersGroup.all();
 
 		if(currentChart=='cichart'){
-			confidenceGraph(data);		
+			confidenceGraph(data);
 		} else if(currentChart=='barchart'){
-			drawGraph(data,false);		
+			drawGraph(data,false);
 		} else if(currentChart=='barper'){
 			drawGraph(data,true);
 		} else if(currentChart=='mapchart'){
-			var data = cf.locationsGroup.all();			
+			var data = cf.locationsGroup.all();
 			updateMap(cf.locationsGroup.all(),cf);
-		}		
-	});		
+		}
+	});
 }
 
 
@@ -340,14 +313,14 @@ function createDropdown(answers,cf,i,agg){
 		}
 		var data = cf.answersGroup.all();
 		if(currentChart=='cichart'){
-			confidenceGraph(data);		
+			confidenceGraph(data);
 		} else if(currentChart=='barchart'){
-			drawGraph(data);		
+			drawGraph(data);
 		} else if(currentChart=='barper'){
 			drawGraph(data,true);
 		} else if(currentChart=='mapchart'){
 			updateMap(cf.locationsGroup.all(),cf);
-		}		
+		}
 	});
 }
 
@@ -365,17 +338,17 @@ function drawGraph(data,percent){
 	var margin = {top: 40, right: 30, bottom: 200, left: 50},
 		width = $("#graph").width() - margin.left - margin.right,
 		height =  430 - margin.top - margin.bottom;
-		
+
  	var x = d3.scale.ordinal()
         .rangeRoundBands([0, width]);
 
     var y = d3.scale.linear()
-        .range([height,0]); 
+        .range([height,0]);
 
     var xAxis = d3.svg.axis()
         .scale(x)
         .orient("bottom");
-      
+
 	x.domain(data.map(function(d) {return d.key; }));
 
 	var maxy = d3.max(data,function(d){
@@ -395,16 +368,16 @@ function drawGraph(data,percent){
 		.attr("class", "x axis baraxis")
 		.attr("transform", "translate(0," + (height+15) + ")")
 		.call(xAxis)
-		.selectAll("text")  
+		.selectAll("text")
 		.style("text-anchor", "end")
 		 .attr("transform", function(d) {
-		    return "rotate(-50)" 
-		});			    		    
+		    return "rotate(-50)"
+		});
 
 	svg.append("g").selectAll("rect")
 	    .data(data)
 	    .enter()
-	    .append("rect") 
+	    .append("rect")
 	    .attr("x", function(d,i) { return x(d.key)+3; })
 	    .attr("width", x.rangeBand()-6)
 	    .attr("y", function(d){return y(d.value);})
@@ -414,7 +387,7 @@ function drawGraph(data,percent){
 	svg.append("g").selectAll("text")
 	    .data(data)
 	    .enter()
-	    .append("text") 
+	    .append("text")
 	    .attr("x", function(d){return x(d.key)+x.rangeBand()/2})
 	    .attr("y", function(d) {if(height-y(d.value)<30){
 	    		return y(d.value)-10;
@@ -422,14 +395,14 @@ function drawGraph(data,percent){
 	    	if(x.rangeBand()<60){
 	    		return y(d.value)-10;
 	    	}
-	    	return y(d.value)+25;	    		
+	    	return y(d.value)+25;
 	    })
 	    .text(function(d){
 	    	if(percent){
 	    		return d3.format(".1%")(d.value/total);
 	    	} else {
 	    		return d3.format(".3d")(d.value);
-	    	}	        
+	    	}
 	    })
 	    .style("text-anchor", "middle")
 	    .attr("class",function(d){
@@ -445,7 +418,7 @@ function drawGraph(data,percent){
 	    	if(x.rangeBand()<60){
 	    		return '#000000'
 	    	}
-	    	return '#ffffff';	    		
+	    	return '#ffffff';
 	    });
 }
 
@@ -476,17 +449,17 @@ function confidenceGraph(data,confidence){
 	var margin = {top: 40, right: 30, bottom: 200, left: 50},
 		width = $("#graph").width() - margin.left - margin.right,
 		height =  430 - margin.top - margin.bottom;
-		
+
  	var x = d3.scale.ordinal()
         .rangeRoundBands([0, width]);
 
     var y = d3.scale.linear()
-        .range([height,0]); 
+        .range([height,0]);
 
     var xAxis = d3.svg.axis()
         .scale(x)
         .orient("bottom");
-      
+
 	x.domain(data.map(function(d) {return d.key; }));
 
 	var maxy = d3.max(data,function(d){
@@ -497,7 +470,7 @@ function confidenceGraph(data,confidence){
 		return d.upper;
 	});
 
-	y.domain([0,Math.max(maxy*1.1,maxuy)]);	
+	y.domain([0,Math.max(maxy*1.1,maxuy)]);
 
 	var svg = d3.select("#graph").append("svg")
 		.attr("width", width + margin.left + margin.right)
@@ -510,26 +483,26 @@ function confidenceGraph(data,confidence){
 		.attr("class", "x axis baraxis")
 		.attr("transform", "translate(0," + (height+20) + ")")
 		.call(xAxis)
-		.selectAll("text")  
+		.selectAll("text")
 		.style("text-anchor", "end")
 		 .attr("transform", function(d) {
-		    return "rotate(-50)" 
+		    return "rotate(-50)"
 		});
 
 	svg.append("g").selectAll("rect")
 	    .data(data)
 	    .enter()
-	    .append("rect") 
+	    .append("rect")
 	    .attr("x", function(d,i) { return x(d.key)+3; })
 	    .attr("width", x.rangeBand()-6)
 	    .attr("y", function(d){return y(d.value/total);})
 	    .attr("height", function(d) {return height-y(d.value/total);})
-	    .attr("fill","#eeeeee");					    		    
+	    .attr("fill","#eeeeee");
 
 	svg.append("g").selectAll("line")
 	    .data(data)
 	    .enter()
-	    .append("line") 
+	    .append("line")
 	    .attr("x1", function(d,i) { return x(d.key)+x.rangeBand()*0.35; })
 	    .attr("x2", function(d,i) { return x(d.key)+x.rangeBand()*0.65; })
 	    .attr("y1", function(d){return y(d.upper);})
@@ -540,7 +513,7 @@ function confidenceGraph(data,confidence){
 	svg.append("g").selectAll("line")
 	    .data(data)
 	    .enter()
-	    .append("line") 
+	    .append("line")
 	    .attr("x1", function(d,i) { return x(d.key)+x.rangeBand()*0.35; })
 	    .attr("x2", function(d,i) { return x(d.key)+x.rangeBand()*0.65; })
 	    .attr("y1", function(d){return y(d.lower);})
@@ -551,19 +524,19 @@ function confidenceGraph(data,confidence){
 	svg.append("g").selectAll("line")
 	    .data(data)
 	    .enter()
-	    .append("line") 
+	    .append("line")
 	    .attr("x1", function(d,i) { return x(d.key)+x.rangeBand()/2; })
 	    .attr("x2", function(d,i) { return x(d.key)+x.rangeBand()/2; })
 	    .attr("y1", function(d){return y(d.lower);})
 	    .attr("y2", function(d) {return y(d.upper);})
 	    .attr("stroke-width",1)
 	    .attr("stroke",config.color)
-	    .style("stroke-dasharray", ("3, 3"));	    	    
+	    .style("stroke-dasharray", ("3, 3"));
 
 	svg.append("g").selectAll("line")
 	    .data(data)
 	    .enter()
-	    .append("line") 
+	    .append("line")
 	    .attr("x1", function(d,i) { return x(d.key)+3; })
 	    .attr("x2", function(d,i) { return x(d.key)+x.rangeBand()-3; })
 	    .attr("y1", function(d){return y(d.value/total);})
@@ -574,11 +547,11 @@ function confidenceGraph(data,confidence){
 	svg.append("g").selectAll("text")
 	    .data(data)
 	    .enter()
-	    .append("text") 
+	    .append("text")
 	    .attr("x", function(d){return x(d.key)+x.rangeBand()/2})
 	    .attr("y", function(d) {return y(d.upper)-10;})
 	    .text(function(d){
-	    	return d3.format(".1%")(d.upper);        
+	    	return d3.format(".1%")(d.upper);
 	    })
 	    .style("text-anchor", "middle")
 	    .attr("class",function(d){
@@ -593,11 +566,11 @@ function confidenceGraph(data,confidence){
 	svg.append("g").selectAll("text")
 	    .data(data)
 	    .enter()
-	    .append("text") 
+	    .append("text")
 	    .attr("x", function(d){return x(d.key)+x.rangeBand()/2})
 	    .attr("y", function(d) {return y(d.lower)+25;})
 	    .text(function(d){
-	    	return d3.format(".1%")(d.lower);        
+	    	return d3.format(".1%")(d.lower);
 	    })
 	    .style("text-anchor", "middle")
 	    .attr("class",function(d){
@@ -609,7 +582,7 @@ function confidenceGraph(data,confidence){
 	    })
 	    .attr("fill",function(d) {return '#000000';});
 
-	$('#graph').append('<p>Confidence intervals calculated for simple random sample method.  Visual not appropriate for other sample methods.</p>');	    
+	$('#graph').append('<p>Confidence intervals calculated for simple random sample method.  Visual not appropriate for other sample methods.</p>');
 }
 
 function createMap(geom){
@@ -662,8 +635,8 @@ function createMap(geom){
 	    this._div.innerHTML = (props ?'<b>' + props[config.joinAttr] + '</b><br />' + Math.round(props.Svalue*100)+'%': 'Hover location for details');
 	};
 
-	info.addTo(map);		
-	
+	info.addTo(map);
+
 	$('#map').hide();
 
 	function onEachFeature(feature, layer) {
@@ -729,7 +702,7 @@ function updateMap(data,cf){
 			} else{
 				var color = config.mapcolors[1];
 			}
-			
+
 		} else {
 			var color = config.mapcolors[0];
 		}
@@ -756,7 +729,7 @@ var currentChart='barchart';
 
 $(window).scroll(function(){
     stickydiv();
-}); 
+});
 
 $('#collapse').hide();
 $('#expand').on('click',function(){
